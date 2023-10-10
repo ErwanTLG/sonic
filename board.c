@@ -1,4 +1,5 @@
 #include "board.h"
+#include <stdio.h>
 
 int trap_line(int line) {
     switch(line % 6){
@@ -15,6 +16,7 @@ int trap_line(int line) {
         case 5 :
             return 8 * WIDTH / 9;
     }
+    return 0;
 }
 
 void init_board(board_t* b) {
@@ -88,9 +90,7 @@ void cell_print(board_t* b, int line, int row, int slice) {
             default :
                 printf("Index out of bound\n");
                 break;
-            default :
-                fprintf(stderr, "Unbound slice in cell_print\n");
-        }
+              }
     } else {
         switch(slice){
             case 0 :
@@ -108,8 +108,6 @@ void cell_print(board_t* b, int line, int row, int slice) {
             default :
                 printf("Index out of bound\n");
                 break;
-            default :
-                fprintf(stderr, "Unbound slice in cell_print\n");
         }
     }
 }

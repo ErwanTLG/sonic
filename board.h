@@ -24,5 +24,6 @@ char board_top(board_t* b, int line, int row);
 char board_peek(board_t* b, int line, int row, int pos);
 void cell_print(board_t* b, int line, int row, int slice);
 void board_print(board_t* b, int highlighted_line);
+void init_board(board_t* b);
 
 #endif
