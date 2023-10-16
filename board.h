@@ -2,7 +2,7 @@
 #define BOARD_H
 
 #include <stdbool.h>
-#define MAX_PLAYER 26
+#define MAX_PLAYER 4
 #define MAX_HEDGEHOG 4
 #define HEIGHT 7
 #define WIDTH 9

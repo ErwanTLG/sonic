@@ -8,8 +8,12 @@ int main(int argc, char** argv) {
 
     board_t board;
     game_init(&board);
-    game_player_turn(&board, 'A', 1);
+    int player = 0;
+    while(true) { // TODO win condition, move from main
+        game_player_turn(&board, 'A' + player, rand() % HEIGHT);
+        player = (player + 1) % MAX_PLAYER;
+}
 
-    system("stty cooked");
+system("stty cooked");
 	return 0;
 }

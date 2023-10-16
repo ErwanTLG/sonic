@@ -153,8 +153,6 @@ void board_print(board_t* b, int dice, pos_t highlighted_pos, pos_t selected_pos
 
 	for(int i = 0; i < HEIGHT; ++i) {
         bool is_dice_line = i == dice;
-        bool is_highlighted_line = i == highlighted_pos.line;
-        bool is_selected_line = i == selected_pos.line;
 
         // we draw the dice line using yellow
         if(is_dice_line)
@@ -175,8 +173,8 @@ void board_print(board_t* b, int dice, pos_t highlighted_pos, pos_t selected_pos
 			}
 
 			for(int j = 0; j < WIDTH; ++j) {
-                bool is_highlighted_cell = is_highlighted_line && j == highlighted_pos.row;
-                bool is_selected_cell = is_selected_line && j == selected_pos.row;
+                bool is_highlighted_cell = i == highlighted_pos.line && j == highlighted_pos.row;
+                bool is_selected_cell = i == selected_pos.line && j == selected_pos.row;
 
                 // we draw the highlighted cell using blue and the selected one using green
                 if(is_highlighted_cell)
@@ -185,9 +183,10 @@ void board_print(board_t* b, int dice, pos_t highlighted_pos, pos_t selected_pos
                     printf(ANSI_COLOR_GREEN);
 
                 cell_print(b, i, j, slice);
-                
+               
+                // resets the color
                 if(is_dice_line)
-                    printf(ANSI_COLOR_YELLOW); // resets the color
+                    printf(ANSI_COLOR_YELLOW);
                 else
                     printf(ANSI_COLOR_RESET);
 

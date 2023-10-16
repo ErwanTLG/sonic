@@ -22,14 +22,16 @@ void game_init(board_t* b) {
     }
 }
 
-void game_player_turn(board_t* b, char player, int dice) {
+// this function is meant to be called when you want the player to select a cell
+// it returns the position of the selected cell
+pos_t game_select_cell(board_t* b, int dice, char* message) {
     char input;
     pos_t highlighted_pos = {.line = 0, .row = 0};
     pos_t selected_pos = {.line = -1, .row = -1};
     do {
         system("clear");
         board_print(b, dice, highlighted_pos, selected_pos); 
-        printf("This is %c's turn : currently moving one hedgehog to another line\n", player);
+        printf("%s", message);
         input = getchar();
         switch(input) {
             case 'z':
@@ -51,24 +53,70 @@ void game_player_turn(board_t* b, char player, int dice) {
                     selected_pos = (pos_t) {.line = -1, .row = -1};
             break;
         }
-    } while(input != 27);
+    } while(input != 27 && input != 32);
+
+    return selected_pos;
 }
 
-vert_move_t game_get_vert_move(board_t* b) {
-    printf("Please enter the line, column and dir you want to play in\n");
-    int line, row, dir;
-    scanf("%d %d %d", &line, &row, &dir);
+// TODO maybe move this to a player.c
+void game_horizontal_move(board_t* b, char player, int dice) {
+    char message[100];
+    sprintf(message, "This is %c's turn. Currently selecting a hedgehog who can change line.\n", player);
+    pos_t selected_pos = game_select_cell(b, dice, message); 
     
-    // TODO test if input is valid here
-    return (vert_move_t) { line, row, dir };
+    if(selected_pos.line == -1) {
+        // the player is not moving any hedgehog, we suggest he should do otherwise
+        printf("You have not selected any hedgehog to move. Do you want to proceed (NO: ESC, YES: any other key)\n");
+        char input = getchar();
+        if(input == 27)
+            game_horizontal_move(b, player, dice);
+    } else {
+        // check if the hedgehog belongs to the player
+        if(board_top(b, selected_pos.line, selected_pos.row) != player) {
+            // if not, we print a message and restart the process
+            printf("Sorry, this hedgehog is not controlled by the current player. (press any key to continue)\n");
+            getchar();
+            game_horizontal_move(b, player, dice);
+        } else {
+            // we can ask the player where he wants to move the hedgehog to
+            sprintf(message, "This is %c's turn. Currently selecting a line to move the hedgehog from (%d, %d) to.\n", player, selected_pos.line, selected_pos.row);
+            pos_t destintation = game_select_cell(b, dice, message);
+
+            // we check if the move is now valid (i.e. different line, same row)
+            if (selected_pos.line != destintation.line && selected_pos.row == destintation.row) {
+                char hedgehog = board_pop(b, selected_pos.line, selected_pos.row);
+                board_push(b, destintation.line, destintation.row, hedgehog);
+            } else {
+                printf("Sorry, this is not a valid move. You have to move the hedgehog from (%d, %d) to a cell positioned on the same row and on a different line.\n", selected_pos.line, selected_pos.row);
+            }
+        }
+    } 
 }
 
-int game_get_horiz_move(board_t* b) {
-    printf("Please enter the row of the hedgehog you want to move\n");
-    int row;
-    scanf("%d", &row);
-    
-    // TODO move verification
+void game_vertical_move(board_t* b, char player, int dice) {
+    char message[100];
+    sprintf(message, "This is %c's turn. Currently selecting a hedgehog who will be pushed one row further\n", player);
+    pos_t selected_pos = game_select_cell(b, dice, message);
+    if(selected_pos.line == -1) {
+        // the player must move a hedgehog, we remind him of that
+        printf("Sorry, you have to select a hedgehog on the yellow line to be moved.\n");
+        getchar();
+        game_vertical_move(b, player, dice);
+    } else {
+        // we check if the selected hedgehog exists and is on the dice line and if it can move (trapped rule)
+        // TODO check trap
+        if(selected_pos.line == dice && 0 < board_height(b, selected_pos.line, selected_pos.row) && selected_pos.row != WIDTH - 1) {
+            char hedgehog = board_pop(b, selected_pos.line, selected_pos.row);
+            board_push(b, selected_pos.line, selected_pos.row + 1, hedgehog);
+        } else {
+            printf("Sorry, this is not a valid move.\n");
+            getchar();
+            game_vertical_move(b, player, dice);
+        }
+    }
+}
 
-    return row;
+void game_player_turn(board_t* b, char player, int dice) {
+    game_horizontal_move(b, player, dice);
+    game_vertical_move(b, player, dice);
 }
