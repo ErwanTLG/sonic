@@ -1,6 +1,17 @@
 #include "board.h"
+#include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
+// https://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
+// this function is used to replicate the trap placement at different dimensions
 int trap_line(int line) {
     switch(line % 6){
         case 0 :
@@ -66,64 +77,89 @@ char board_peek(board_t* b, int line, int row, int pos) {
         return ' '; 
 }
 
-void cell_print(board_t* b, int line, int row, int slice) {
+void cell_print_trapped(board_t* b, int line, int row, int slice) { 
 	char top_hedgehog = board_top(b, line, row);
 	char snd_hedgehog = board_peek(b, line, row, 1);
 	char thd_hedgehog = board_peek(b, line, row, 2);
 	char fth_hedgehog = board_peek(b, line, row, 3);
 
 	int nb_hedgehog = board_height(b, line, row);
-    if(b->content[line][row].isTrapped){
-        switch(slice){
-            case 0 :
-                printf(" vvv ");
-                break;
-            case 1 :
-                printf(">%c%c%c<", top_hedgehog, top_hedgehog, top_hedgehog);
-                break;
-            case 2 :
-                printf(">%c%c%c<", snd_hedgehog, thd_hedgehog, fth_hedgehog);
-                break;
-            case 3 :
-                printf(" ^%d^ ",nb_hedgehog);
-                break;
-            default :
-                printf("Index out of bound\n");
-                break;
-              }
-    } else {
-        switch(slice){
-            case 0 :
-                printf(" --- ");
-                break;
-            case 1 :
-                printf("|%c%c%c|", top_hedgehog, top_hedgehog, top_hedgehog);
-                break;
-            case 2 :
-                printf("|%c%c%c|", snd_hedgehog, thd_hedgehog, fth_hedgehog);
-                break;
-            case 3 :
-                printf(" -%d- ", nb_hedgehog);
-                break;
-            default :
-                printf("Index out of bound\n");
-                break;
-        }
+
+    switch(slice) {
+        case 0 :
+            printf(" vvv ");
+            break;
+        case 1 :
+            printf(">%c%c%c<", top_hedgehog, top_hedgehog, top_hedgehog);
+            break;
+        case 2 :
+            printf(">%c%c%c<", snd_hedgehog, thd_hedgehog, fth_hedgehog);
+            break;
+        case 3 :
+            printf(" ^%d^ ",nb_hedgehog);
+            break;
+        default :
+            printf("Index out of bound\n");
+            break;
     }
 }
 
-void board_print(board_t* b, int highlighted_line) {
+void cell_print_default(board_t* b, int line, int row, int slice) {
+	char top_hedgehog = board_top(b, line, row);
+	char snd_hedgehog = board_peek(b, line, row, 1);
+	char thd_hedgehog = board_peek(b, line, row, 2);
+	char fth_hedgehog = board_peek(b, line, row, 3);
+
+	int nb_hedgehog = board_height(b, line, row);
+
+    switch(slice) {
+        case 0 :
+            printf(" --- ");
+            break;
+        case 1 :
+            printf("|%c%c%c|", top_hedgehog, top_hedgehog, top_hedgehog);
+            break;
+        case 2 :
+            printf("|%c%c%c|", snd_hedgehog, thd_hedgehog, fth_hedgehog);
+            break;
+        case 3 :
+            printf(" -%d- ", nb_hedgehog);
+            break;
+        default :
+            printf("Index out of bound\n");
+            break;
+    }
+}
+
+void cell_print(board_t* b, int line, int row, int slice) {
+    if(b->content[line][row].isTrapped)
+        cell_print_trapped(b, line, row, slice);
+    else
+        cell_print_default(b, line, row, slice);
+}
+
+void board_print(board_t* b, int dice, pos_t highlighted_pos, pos_t selected_pos) {
 	printf("     ");
 	for(int i = 0; i < WIDTH; ++i) {
 		printf(" row  ");
 	}
 	printf("\n");
+
 	printf("     ");
 	for(int i = 0; i < WIDTH; ++i) {
-		printf("  %c   ",'a'+i);
+		printf("  %c   ", 'a'+i);
 	}
 	printf("\n");
+
 	for(int i = 0; i < HEIGHT; ++i) {
+        bool is_dice_line = i == dice;
+        bool is_highlighted_line = i == highlighted_pos.line;
+        bool is_selected_line = i == selected_pos.line;
+
+        // we draw the dice line using yellow
+        if(is_dice_line)
+            printf(ANSI_COLOR_YELLOW);
+     
 		for(int slice = 0; slice < 4; ++slice) {
 			switch(slice) {
 				case 0 :
@@ -134,15 +170,31 @@ void board_print(board_t* b, int highlighted_line) {
 					printf("line ");
 				break;
 				case 2 :
-					printf("  %d  ",i+1);
+					printf("  %d  ", i+1);
 				break;
 			}
+
 			for(int j = 0; j < WIDTH; ++j) {
-				cell_print(b, i, j, slice);
+                bool is_highlighted_cell = is_highlighted_line && j == highlighted_pos.row;
+                bool is_selected_cell = is_selected_line && j == selected_pos.row;
+
+                // we draw the highlighted cell using blue and the selected one using green
+                if(is_highlighted_cell)
+                    printf(ANSI_COLOR_CYAN);
+                else if(is_selected_cell)
+                    printf(ANSI_COLOR_GREEN);
+
+                cell_print(b, i, j, slice);
+                
+                if(is_dice_line)
+                    printf(ANSI_COLOR_YELLOW); // resets the color
+                else
+                    printf(ANSI_COLOR_RESET);
+
 				printf(" ");
 			}
 			printf("\n");
-		}
-		printf("\n");
+		} 
+		printf(ANSI_COLOR_RESET "\n");
 	}
 }
