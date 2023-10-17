@@ -46,14 +46,14 @@ pos_t game_select_cell(board_t* b, int dice, char* message) {
             case 'q':
                 highlighted_pos.row = (highlighted_pos.row - 1 + WIDTH) % WIDTH;
                 break;
-            case '\n':
-                if(selected_pos.line == -1) // not selected
-                    selected_pos = highlighted_pos;
-                else
-                    selected_pos = (pos_t) {.line = -1, .row = -1};
-            break;
+            case '\n':  // we select the currently highlighted cell
+                selected_pos = highlighted_pos;
+                break;
+            case 27:    // ESC pressed, we unselect the cell
+                selected_pos = (pos_t) {.line = -1, .row = -1};
+                break;
         }
-    } while(input != 27 && input != 32);
+    } while(input != 32); // we stop when SPACE is pressed
 
     return selected_pos;
 }
@@ -68,7 +68,7 @@ void game_horizontal_move(board_t* b, char player, int dice) {
         // the player is not moving any hedgehog, we suggest he should do otherwise
         printf("You have not selected any hedgehog to move. Do you want to proceed (NO: ESC, YES: any other key)\n");
         char input = getchar();
-        if(input == 27)
+        if(input == 27)     // input == ESC
             game_horizontal_move(b, player, dice);
     } else {
         // check if the hedgehog belongs to the player
@@ -88,6 +88,7 @@ void game_horizontal_move(board_t* b, char player, int dice) {
                 board_push(b, destintation.line, destintation.row, hedgehog);
             } else {
                 printf("Sorry, this is not a valid move. You have to move the hedgehog from (%d, %d) to a cell positioned on the same row and on a different line.\n", selected_pos.line, selected_pos.row);
+                getchar();
             }
         }
     } 
@@ -117,6 +118,7 @@ void game_vertical_move(board_t* b, char player, int dice) {
 }
 
 void game_player_turn(board_t* b, char player, int dice) {
+    // TODO check if player has any hedgehog to move, if not then skip this step
     game_horizontal_move(b, player, dice);
     game_vertical_move(b, player, dice);
 }
