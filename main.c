@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "board.h"
 #include "gamemaster.h"
+#include "player.h"
 
 int main(int argc, char** argv) {
     system("stty cbreak");
@@ -10,7 +11,7 @@ int main(int argc, char** argv) {
     game_init(&board);
     int player = 0;
     while(true) { // TODO win condition, move from main
-        game_player_turn(&board, 'A' + player, rand() % HEIGHT);
+        player_turn(&board, 'A' + player, rand() % HEIGHT);
         player = (player + 1) % MAX_PLAYER;
 }
 

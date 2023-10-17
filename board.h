@@ -30,4 +30,4 @@ char board_peek(board_t* b, int line, int row, int pos);
 void board_print(board_t* b, int dice, pos_t highlighted_pos, pos_t selected_pos);
 void init_board(board_t* b);
 
-#endif
+#endif  // BOARD_H
