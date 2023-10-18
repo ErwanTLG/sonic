@@ -64,8 +64,10 @@ int board_height(board_t* b, int line, int row) {
 
 char board_top(board_t* b, int line, int row) {
 	int i_top = b->content[line][row].top;
-	if(0 <= i_top) { return b->content[line][row].stack[i_top]+'A'-'a'; }
-	else { return ' '; }
+	if(0 <= i_top) 
+        return b->content[line][row].stack[i_top];
+	else 
+        return ' ';
 }
 
 char board_peek(board_t* b, int line, int row, int pos) {
@@ -79,6 +81,7 @@ char board_peek(board_t* b, int line, int row, int pos) {
 
 void cell_print_trapped(board_t* b, int line, int row, int slice) { 
 	char top_hedgehog = board_top(b, line, row);
+    if(top_hedgehog != ' ') top_hedgehog += 'A' - 'a';  // makes the top hedgehog uppercase
 	char snd_hedgehog = board_peek(b, line, row, 1);
 	char thd_hedgehog = board_peek(b, line, row, 2);
 	char fth_hedgehog = board_peek(b, line, row, 3);
@@ -106,6 +109,7 @@ void cell_print_trapped(board_t* b, int line, int row, int slice) {
 
 void cell_print_default(board_t* b, int line, int row, int slice) {
 	char top_hedgehog = board_top(b, line, row);
+    if(top_hedgehog != ' ') top_hedgehog += 'A' - 'a';  // makes the top hedgehog uppercase
 	char snd_hedgehog = board_peek(b, line, row, 1);
 	char thd_hedgehog = board_peek(b, line, row, 2);
 	char fth_hedgehog = board_peek(b, line, row, 3);

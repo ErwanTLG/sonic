@@ -1,20 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "board.h"
 #include "gamemaster.h"
 #include "player.h"
+#include "extensions.h"
 
 int main(int argc, char** argv) {
+    
+    // print help messages if wanted
+    if(1 < argc && (strcmp("help", argv[1]) && strcmp("h", argv[1])))
+        printf(""); 
+
+    parse_extensions(argc, argv);    
+
     system("stty cbreak");
 
     board_t board;
-    game_init(&board);
-    int player = 0;
-    while(true) { // TODO win condition, move from main
-        player_turn(&board, 'A' + player, rand() % HEIGHT);
-        player = (player + 1) % MAX_PLAYER;
-}
+    gamestate_t state = game_init(&board);
+    game_play(state);
 
-system("stty cooked");
+    system("stty cooked");
 	return 0;
 }

@@ -11,6 +11,6 @@ make
 ```
 puis 
 ```
-make run
+./sonic
 ```
 

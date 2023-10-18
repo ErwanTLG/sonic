@@ -1,8 +1,10 @@
 // This file contains all the functions related to the special rules of the game
 // For example win condition, trap rules...
+// See the associated header file for a description of what each function does
 
 #include "rule.h"
 #include "board.h"
+#include "gamemaster.h"
 #include <stdbool.h>
 
 char rule_winner(board_t* b) {
@@ -16,7 +18,6 @@ char rule_winner(board_t* b) {
     }
     return 0;
 }
-
 
 bool rule_is_blocked(board_t* b, pos_t pos) {
     if(!b->content[pos.line][pos.row].isTrapped)
@@ -39,4 +40,22 @@ bool rule_can_move(board_t* b, pos_t pos) {
         return false;
 
     return !rule_is_blocked(b, pos);
+}
+
+bool rule_has_existing_vertical_move(gamestate_t state) {
+    for(int i = 0; i < HEIGHT; ++i) {
+        for(int j = 0; j < WIDTH - 1; ++j) {
+            if(board_top(state.board, i, j) == state.player && !rule_is_blocked(state.board, (pos_t) {.line = i, .row = j}))
+                return true;
+        }
+    }
+    return false;
+}
+
+bool rule_has_existing_horizontal_move(gamestate_t state) {
+    for (int j = 0; j < WIDTH - 1; ++j) {
+        if (rule_can_move(state.board, (pos_t) {.line = state.dice, .row = j}))
+            return true;
+    }
+    return false;
 }
