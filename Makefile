@@ -14,10 +14,10 @@ main.o: main.c gamemaster.o board.o player.o
 gamemaster.o: gamemaster.c gamemaster.h board.o rule.o player.o
 	$(CC) -o $@ -c $< $(CFLAGS)
 
-rule.o: rule.c rule.h board.o gamemaster.o
+rule.o: rule.c rule.h board.o
 	$(CC) -o $@ -c $< $(CFLAGS)	
 
-player.o: player.c player.h board.o rule.o gamemaster.o
+player.o: player.c player.h board.o rule.o
 	$(CC) -o $@ -c $< $(CFLAGS)
 
 board.o: board.c board.h

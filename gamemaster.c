@@ -53,6 +53,7 @@ gamestate_t game_player_turn(gamestate_t state) {
 void game_play(gamestate_t state) {
     while (rule_winner(state.board) == 0) {
         state = game_player_turn(state);
+
     }
     
     char winner = rule_winner(state.board);

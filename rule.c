@@ -4,7 +4,6 @@
 
 #include "rule.h"
 #include "board.h"
-#include "gamemaster.h"
 #include <stdbool.h>
 
 char rule_winner(board_t* b) {

@@ -2,7 +2,6 @@
 #define RULE_H
 
 #include "board.h"
-#include "gamemaster.h"
 #include <stdbool.h>
 
 /// returns the player who won the game. Returns `0` if no player won yet

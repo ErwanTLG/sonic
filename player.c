@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include "board.h"
 #include "rule.h"
-#include "gamemaster.h"
 
 // this function is meant to be called when you want the player to select a cell
 // it returns the position of the selected cell
