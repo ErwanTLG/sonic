@@ -6,6 +6,7 @@
 #include "board.h"
 #include "rule.h"
 #include "player.h"
+#include "extensions.h"
 //#include "utils.h"
 
 gamestate_t game_init(board_t* b) {
@@ -41,6 +42,8 @@ gamestate_t game_player_turn(gamestate_t state) {
         horiz_move_t move = player_horizontal_move(state.board, state.player, state.dice);
         char hedgehog = board_pop(state.board, state.dice, move.row);
         board_push(state.board, state.dice, move.row + 1, hedgehog);
+        if(extensions_enabled(DOPING))
+            state = extensions_doping(state);
     }
 
     // we return the new gamestate, ready for the next turn to be started

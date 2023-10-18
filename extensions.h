@@ -1,6 +1,7 @@
 #ifndef EXTENSIONS_H
 #define EXTENSIONS_H
 
+#include "board.h"
 #include <stdbool.h>
 
 typedef enum extensions {
@@ -13,5 +14,8 @@ typedef enum extensions {
 
 bool extensions_enabled(extensions_e e);
 void parse_extensions(int argc, char** argv);
+
+/// Implements the doping extension (#3). Should be called after each horizontal move
+gamestate_t extensions_doping(gamestate_t state);
 
 #endif  // EXTENSIONS_H

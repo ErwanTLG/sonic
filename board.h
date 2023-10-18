@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #define MAX_PLAYER 4
 #define MAX_HEDGEHOG 4
-#define HEIGHT 7
-#define WIDTH 9
+#define HEIGHT 3
+#define WIDTH 3
 
 typedef struct cell {
     char stack[MAX_HEDGEHOG*MAX_PLAYER];

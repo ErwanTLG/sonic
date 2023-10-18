@@ -11,7 +11,7 @@ sonic: gamemaster.o board.o extensions.o rule.o player.o main.o
 main.o: main.c gamemaster.o board.o player.o
 	$(CC) -o $@ -c $< $(CFLAGS)
 
-gamemaster.o: gamemaster.c gamemaster.h board.o rule.o player.o
+gamemaster.o: gamemaster.c gamemaster.h board.o rule.o player.o extensions.o
 	$(CC) -o $@ -c $< $(CFLAGS)
 
 rule.o: rule.c rule.h board.o
@@ -23,7 +23,7 @@ player.o: player.c player.h board.o rule.o
 board.o: board.c board.h
 	$(CC) -o $@ -c $< $(CFLAGS)
 
-extensions.o: extensions.c extensions.h
+extensions.o: extensions.c extensions.h board.o rule.o
 	$(CC) -o $@ -c $< $(CFLAGS)	
 
 .PHONY: clean
