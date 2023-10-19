@@ -1,6 +1,8 @@
+#include <stdlib.h>
 #include <stdbool.h>
+#include <float.h>
 
-#include "npc.h"
+#include "npc1.h"
 #include "board.h"
 #include "gamemaster.h"
 
@@ -12,7 +14,7 @@ move_list_t* concat(move_list_t* lst, int nx, int ny, int ndir) {
     n_lst->x = nx;
     n_lst->y = ny;
     n_lst->dir = ndir;
-    retunr n_lst;
+    return n_lst;
 }
 
 void free_list(move_list_t* lst) {
@@ -30,7 +32,7 @@ void free_list(move_list_t* lst) {
 
 int distance(board_t* b, int x, int y) {
     if(0 <= x && x < HEIGHT && 0 <= y && y < WIDTH) {
-        if(b[x][trap_line(x)]->top != -1) {
+        if(board_height(b,x,trap_line(x)) != 0) {
             return WIDTH - trap_line(x);
         } else {
             return WIDTH - y;
@@ -41,11 +43,11 @@ int distance(board_t* b, int x, int y) {
 }
 
 int cell_heuristic(board_t* b, int x, int y) {
-    int cell_heur = distance(b, x, y) << n;
+    int cell_heur = distance(b, x, y) << WIDTH;
     for(int d = 1; d < WIDTH; ++d) {
-        cell_heur += (distance(b, x + d, y) + distance(b, x - d, y)) << (n-k);
+        cell_heur += (distance(b, x + d, y) + distance(b, x - d, y)) << (WIDTH-d);
     }
-    return hor_heur >> n;
+    return (cell_heur >> WIDTH);
 }
 
 int team_sign(char team, char hhog) { return (team == hhog) ? 1 : -1; }
@@ -58,13 +60,13 @@ int heuristic(board_t* b, char team) {
             int cell_total_score = 0;
             int cell_depth = board_height(b, x, y);
             for(int i = 0; i < cell_depth; ++i) {
-                int absolute_heur = team_sign(team, b[x][y]->stack[i]) * cell_horizontal_heuristic(b, x, y);
+                int absolute_heur = team_sign(team, board_peek(b, x, y, cell_depth-i)) * cell_horizontal_heuristic(b, x, y);
                 cell_total_score += absolute_heur << (cell_depth - i);
             }
             final_heur += (cell_total_score >> cell_depth);
         }
     }
-    return heuristic;
+    return final_heur;
 }
 
 // computing possible moves
@@ -73,7 +75,7 @@ void possible_vertical_moves(board_t* b, move_list_t* possible_moves, char team)
     for(int x = 0; x < HEIGHT; ++x) {
         for(int y = 0; y < WIDTH - 1; ++y) {
             // Up
-            if(0 <= x-1 && board_height(b, x, y) != 0) {
+            if(0 <= x-1 && board_height(b, x, y) != 0 && board_top(b, x, y) == team) {
                 concat(possible_moves, x, y, -1);
             }
             // Down
@@ -94,18 +96,17 @@ void possible_horizontal_moves(board_t* b, move_list_t* possible_moves, char tea
 
 // min-max
 
-double min_max(game_state_t state, vert_move_t* next_vert_mv, hor_move_t* next_hor_mv, bool edit_mv, char initial_team, int diced_line, int depth) {
+double min_max(gamestate_t state, vert_move_t* next_vert_mv, horiz_move_t* next_hor_mv, bool edit_mv, char initial_team, int depth) {
     if(depth == 0) {
-        return (double)heuristic(state.board, team);
+        return (double)heuristic(state.board, state.player);
     } else {
-        // TODO Check if there is no moves possible !!!!!!
         // Processing vertical moves
         move_list_t* vert_moves = malloc(sizeof(move_list_t));
         // Adding the idle move
         vert_moves->x = -1;
         vert_moves->y = -1;
         vert_moves->dir = 0;
-        possible_vertical_moves(state.board, vert_moves, team);
+        possible_vertical_moves(state.board, vert_moves, state.player);
 
         // Processing horizontal moves
         move_list_t* hor_moves = malloc(sizeof(move_list_t));
@@ -119,37 +120,47 @@ double min_max(game_state_t state, vert_move_t* next_vert_mv, hor_move_t* next_h
 
         board_t future_board;
         double future_board_score;
-        // TODO give a meaningful value to opt_score
-        double opt_score = 0;
+
+        double opt_score;
+        if(state.player == initial_team) {
+            opt_score = -DBL_MAX;
+        } else {
+            opt_score = DBL_MAX;
+        }
         int opt_vert_x;
         int opt_vert_y;
         int opt_vert_dir;
-        int opt_hor_x;
         int opt_hor_y;
-        while(cur_vert_move != NULL) {
+        do {
+            cur_hor_move = hor_moves;
             while(cur_hor_move != NULL) {
                 board_cpy(state.board, &future_board);
-                // TODO make_move(future_board, cur_vert_move->x, ...)
-                state.board = future_board;
-                //TODODODODODODODO
-                game_exec_vert_move(state, cur_vert_move->)
-                // TODO make_move(future_board, cur_hor_move->x, ...)
-                // TODO char next_player = ...
+                gamestate_t future_state;
+                future_state.board = &future_board;
+                vert_move_t tmp_v_move;
+                tmp_v_move.line = cur_vert_move->x;
+                tmp_v_move.row = cur_vert_move->y;
+                tmp_v_move.dir = cur_vert_move->dir;
+                horiz_move_t tmp_h_move;
+                tmp_h_move.row = cur_vert_move->y;
+                future_state = game_exec_vert_move(future_state, tmp_v_move);
+                future_state = game_exec_hor_move(future_state, tmp_h_move);
                 future_board_score = 0;
+                future_state.player = ((state.player - 'a' + 1) % MAX_PLAYER) + 'a';
                 for(int possible_line = 0; possible_line < HEIGHT; ++possible_line) {
+                    future_state.dice = possible_line;
                     // TODO **maybe** replace the mean by the median value
-                    future_board += min_max(&future_board, next_vert_mv, next_hor_mv, false, initial_team, next_player, possible_line, depth-1) / 6;
+                    future_board_score += min_max(future_state, next_vert_mv, next_hor_mv, false, initial_team, depth-1) / 6;
                 }
 
                 // We act as the opposing players are a whole
                 // making up for the opponent in a 2-player game
-                if(team == initial_team) {
+                if(state.player == initial_team) {
                     if(opt_score < future_board_score) {
                         opt_score = future_board_score;
                         opt_vert_x = cur_vert_move->x;
                         opt_vert_y = cur_vert_move->y;
                         opt_vert_dir = cur_vert_move->dir;
-                        opt_hor_x = cur_hor_move->x;
                         opt_hor_y = cur_hor_move->y;
                     }
                 } else {
@@ -158,12 +169,13 @@ double min_max(game_state_t state, vert_move_t* next_vert_mv, hor_move_t* next_h
                         opt_vert_x = cur_vert_move->x;
                         opt_vert_y = cur_vert_move->y;
                         opt_vert_dir = cur_vert_move->dir;
-                        opt_hor_x = cur_hor_move->x;
                         opt_hor_y = cur_hor_move->y;
                     }
                 }
+                cur_hor_move = cur_hor_move->next;
             }
-        }
+            cur_vert_move = cur_vert_move->next;
+        } while(cur_vert_move != NULL);
         free_list(cur_vert_move);
         free_list(cur_hor_move);
         if(edit_mv) {
@@ -179,13 +191,12 @@ double min_max(game_state_t state, vert_move_t* next_vert_mv, hor_move_t* next_h
 // npc turn
 
 gamestate_t game_npc_turn(gamestate_t state) {
-    vert_move_t v_move;
-    horiz_move_t h_move;
+    //vert_move_t v_move;
+    //horiz_move_t h_move;
 
-    min_max(state, &v_move, &h_move, true, state.player, state.dice, 1);
+    //min_max(state, &v_move, &h_move, true, state.player, 1);
     
-    state = game_exec_vert_move(state, v_move);
-    state = game_exec_hor_move(state, h_move);
-
+    //state = game_exec_vert_move(state, v_move);
+    //state = game_exec_hor_move(state, h_move);
     return state;
 }
