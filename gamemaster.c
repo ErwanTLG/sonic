@@ -8,6 +8,7 @@
 #include "player.h"
 #include "extensions.h"
 #include "utils.h"
+#include "npc1.h"
 
 gamestate_t game_init(board_t* b) {
     // TODO get players
@@ -27,7 +28,7 @@ gamestate_t game_init(board_t* b) {
     return (gamestate_t) {.player = 'a', .board = b, .doped = false};
 }
 
-game_state_t game_exec_vert_move(gamestate_t state, vert_move_t move) {
+gamestate_t game_exec_vert_move(gamestate_t state, vert_move_t move) {
     if(move.dir != 0) {
         char hedgehog = board_pop(state.board, move.line, move.row);
         board_push(state.board, move.line + move.dir, move.row, hedgehog);
@@ -35,7 +36,7 @@ game_state_t game_exec_vert_move(gamestate_t state, vert_move_t move) {
     return state;
 }
 
-game_state_t game_exec_hor_move(gamestate_t state, hor_move_t mvoe) {
+gamestate_t game_exec_hor_move(gamestate_t state, horiz_move_t move) {
     char hedgehog = board_pop(state.board, state.dice, move.row);
     board_push(state.board, state.dice, move.row + 1, hedgehog);
     if(extensions_enabled(DOPING))
@@ -60,7 +61,11 @@ gamestate_t game_player_turn(gamestate_t state) {
 
 void game_play(gamestate_t state) {
     while (rule_winner(state.board) == 0) {
-        state = game_player_turn(state);
+        if(/*the current player is an npc*/) {
+            state = game_npc_turn(state);
+        } else {
+            state = game_player_turn(state);
+        }
         // we return the new gamestate, ready for the next turn to be started
         if(++state.player == 'a' + MAX_PLAYER)
             state.player = 'a';

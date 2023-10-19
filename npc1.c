@@ -8,6 +8,7 @@
 
 // struct list methods
 
+
 move_list_t* concat(move_list_t* lst, int nx, int ny, int ndir) {
     move_list_t* n_lst = malloc(sizeof(move_list_t));
     n_lst->next = lst;
@@ -60,7 +61,7 @@ int heuristic(board_t* b, char team) {
             int cell_total_score = 0;
             int cell_depth = board_height(b, x, y);
             for(int i = 0; i < cell_depth; ++i) {
-                int absolute_heur = team_sign(team, board_peek(b, x, y, cell_depth-i)) * cell_horizontal_heuristic(b, x, y);
+                int absolute_heur = team_sign(team, board_peek(b, x, y, cell_depth-i)) * cell_heuristic(b, x, y);
                 cell_total_score += absolute_heur << (cell_depth - i);
             }
             final_heur += (cell_total_score >> cell_depth);

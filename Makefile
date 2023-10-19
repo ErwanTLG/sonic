@@ -5,7 +5,7 @@ EXEC=sonic
 
 all: $(EXEC)
 
-sonic: gamemaster.o board.o extensions.o rule.o player.o utils.o main.o
+sonic: gamemaster.o board.o extensions.o rule.o player.o utils.o main.o npc1.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 main.o: main.c gamemaster.o board.o player.o
@@ -27,6 +27,9 @@ extensions.o: extensions.c extensions.h board.o rule.o
 	$(CC) -o $@ -c $< $(CFLAGS)	
 
 utils.o: utils.c utils.h
+	$(CC) -o $@ -c $< $(CFLAGS)
+
+npc1.o: npc1.c npc1.h board.o gamemaster.o
 	$(CC) -o $@ -c $< $(CFLAGS)
 
 .PHONY: clean
