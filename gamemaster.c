@@ -7,7 +7,7 @@
 #include "rule.h"
 #include "player.h"
 #include "extensions.h"
-//#include "utils.h"
+#include "utils.h"
 
 gamestate_t game_init(board_t* b) {
     // TODO get players
@@ -21,42 +21,50 @@ gamestate_t game_init(board_t* b) {
     }
 
     for(int i = 0; i < HEIGHT; ++i) {
-        //array_shuffle(b->content[i][0].stack, b->content[i][0].top + 1);
+        array_shuffle(b->content[i][0].stack, b->content[i][0].top + 1);
     }
     
     return (gamestate_t) {.player = 'a', .board = b, .doped = false};
+}
+
+game_state_t game_exec_vert_move(gamestate_t state, vert_move_t move) {
+    if(move.dir != 0) {
+        char hedgehog = board_pop(state.board, move.line, move.row);
+        board_push(state.board, move.line + move.dir, move.row, hedgehog);
+    }
+    return state;
+}
+
+game_state_t game_exec_hor_move(gamestate_t state, hor_move_t mvoe) {
+    char hedgehog = board_pop(state.board, state.dice, move.row);
+    board_push(state.board, state.dice, move.row + 1, hedgehog);
+    if(extensions_enabled(DOPING))
+        state = extensions_doping(state);
+    return state;
 }
 
 gamestate_t game_player_turn(gamestate_t state) {
     // phase 1 of the turn, moving one hedgehog vertically
     if(rule_has_existing_vertical_move(state)) {
         vert_move_t move = player_vertical_move(state.board, state.player, state.dice);
-        if(move.dir != 0) {
-            char hedgehog = board_pop(state.board, move.line, move.row);
-            board_push(state.board, move.line + move.dir, move.row, hedgehog);
-        }
+        state = game_exec_vert_move(state, move);
     }
 
     // phase 2 of the turn, pushing one hedgehog horizontally
     if(rule_has_existing_horizontal_move(state)) {
         horiz_move_t move = player_horizontal_move(state.board, state.player, state.dice);
-        char hedgehog = board_pop(state.board, state.dice, move.row);
-        board_push(state.board, state.dice, move.row + 1, hedgehog);
-        if(extensions_enabled(DOPING))
-            state = extensions_doping(state);
+        state = game_exec_hor_move(state, move);
     }
-
-    // we return the new gamestate, ready for the next turn to be started
-    if(++state.player == 'a' + MAX_PLAYER)
-        state.player = 'a';
-    state.dice = rand() % HEIGHT;
     return state;
 }
 
 void game_play(gamestate_t state) {
     while (rule_winner(state.board) == 0) {
         state = game_player_turn(state);
-
+        // we return the new gamestate, ready for the next turn to be started
+        if(++state.player == 'a' + MAX_PLAYER)
+            state.player = 'a';
+        state.dice = rand() % HEIGHT;
     }
     
     char winner = rule_winner(state.board);

@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// https://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c
 #define ANSI_COLOR_GREEN   "\x1b[32m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -14,17 +13,17 @@
 // this function is used to replicate the trap placement at different dimensions
 int trap_line(int line) {
     switch(line % 6){
-        case 0 :
+        case 0:
             return WIDTH / 3;
-        case 1 :
+        case 1:
             return 7 * WIDTH / 9;
-        case 2 :
+        case 2:
             return 5 * WIDTH / 9;
-        case 3 :
+        case 3:
             return 2 * WIDTH / 9;
-        case 4 :
+        case 4:
             return 4 * WIDTH / 9;
-        case 5 :
+        case 5:
             return 8 * WIDTH / 9;
     }
     return 0;
@@ -87,24 +86,30 @@ void cell_print_trapped(board_t* b, int line, int row, int slice) {
 	char fth_hedgehog = board_peek(b, line, row, 3);
 
 	int nb_hedgehog = board_height(b, line, row);
-
     switch(slice) {
-        case 0 :
+        case 0:
             printf(" vvv ");
             break;
-        case 1 :
+        case 1:
             printf(">%c%c%c<", top_hedgehog, top_hedgehog, top_hedgehog);
             break;
-        case 2 :
+        case 2:
             printf(">%c%c%c<", snd_hedgehog, thd_hedgehog, fth_hedgehog);
             break;
-        case 3 :
-            printf(" ^%d^ ",nb_hedgehog);
+        case 3:
+            // we make it so that the length of the displayed number doesn't affect alignement
+            if(100 <= nb_hedgehog)
+                printf(" %d ", nb_hedgehog);
+            else if (10 <= nb_hedgehog)
+                printf(" ^%d ", nb_hedgehog);
+            else
+                printf(" ^%d^ ", nb_hedgehog);
             break;
-        default :
-            printf("Index out of bound\n");
+        default:
+            fprintf(stderr, "Unbound slice in cell_print\n");
             break;
-    }
+        }
+ 
 }
 
 void cell_print_default(board_t* b, int line, int row, int slice) {
@@ -127,10 +132,16 @@ void cell_print_default(board_t* b, int line, int row, int slice) {
             printf("|%c%c%c|", snd_hedgehog, thd_hedgehog, fth_hedgehog);
             break;
         case 3 :
-            printf(" -%d- ", nb_hedgehog);
+            // we make it so that the length of the displayed number doesn't affect alignement
+            if(100 <= nb_hedgehog)
+                printf(" %d ", nb_hedgehog);
+            else if (10 <= nb_hedgehog)
+                printf(" -%d ", nb_hedgehog);
+            else
+                printf(" -%d- ", nb_hedgehog);
             break;
-        default :
-            printf("Index out of bound\n");
+        default:
+            fprintf(stderr, "Unbound slice in cell_print\n");
             break;
     }
 }
@@ -200,4 +211,16 @@ void board_print(board_t* b, int dice, pos_t highlighted_pos, pos_t selected_pos
 		} 
 		printf(ANSI_COLOR_RESET "\n");
 	}
+}
+
+void board_cpy(board_t* src, board_t* goal) {
+    for(int x = 0; x < HEIGHT; ++x) {
+        for(int y = 0; y < WIDTH; y++) {
+            goal->content[x][y].top = src->content[x][y].top;
+            goal->content[x][y].isTrapped = src->content[x][y].isTrapped;
+            for(int i = 0; i <= goal->content[x][y].top; ++i) {
+                goal->content[x][y].stack[i] = src->content[x][y].stack[i];
+            }
+        }
+    }
 }
